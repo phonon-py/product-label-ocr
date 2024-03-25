@@ -40,6 +40,7 @@ class Application(tk.Frame):
 
         入力ソースの各種設定パラメータ
         '''
+        
         # 初期カメラ番号
         video_source = 0
         # カメラ描写の横サイズ
@@ -47,33 +48,59 @@ class Application(tk.Frame):
         # カメラ描写の縦サイズ
         HEIGHT = 480
 
+        # Webカメラを開く
         self.vcap = cv2.VideoCapture(video_source)
+
+        # Webカメラのフレームサイズ(横)を設定
         self.vcap.set(cv2.CAP_PROP_FRAME_WIDTH, WIDTH)
+
+        # Webカメラのフレームサイズ(縦)を設定
         self.vcap.set(cv2.CAP_PROP_FRAME_HEIGHT, HEIGHT)
+
+        # 設定した横のフレームサイズを取得
         self.width = self.vcap.get(cv2.CAP_PROP_FRAME_WIDTH)
+
+        # 設定した縦のフレームサイズを取得
         self.height = self.vcap.get(cv2.CAP_PROP_FRAME_HEIGHT)
-        print(self.width, self.height)
-        # ---------------------------------------------------------
-        # Widget
-        # ---------------------------------------------------------
-        self.create_widgets()
-        # ---------------------------------------------------------
-        # Canvas Update
-        # ---------------------------------------------------------
-        self.delay = 15 #[mili seconds]
+
+        # キャンバス更新間隔をミリ秒単位で設定 (15ミリ秒)
+        self.delay = 15 # [mili seconds]
+
+        # キャンバスのアップデート関数の呼び出し (現在コメントアウト)
         # self.update()
+        
+        '''
+        フレームやボタンなどのウィジェットの実行
+        '''
+
+        self.create_widgets()
     
     def create_widgets(self):
-        #Frame_Camera
-        self.frame_cam = tk.LabelFrame(self.master, text = 'カメラ画像', font=self.font_frame)
+        # カメラのフレーム
+        self.frame_cam = tk.LabelFrame(self.master, text = '入力画像', font=self.font_frame)
         self.frame_cam.pack(side=LEFT, anchor=tk.NW)
-        #Canvas
+        
+        # Webカメラの画像を描写するキャンパスフレーム
         self.canvas1 = tk.Canvas(self.frame_cam)
-        self.canvas1.configure(width= self.width, height=self.height)
+        self.canvas1.configure(width=self.width, height=self.height)
         self.canvas1.pack()
         
-        # 部品名用のフレーム
-        self.frame_c = tk.LabelFrame(self.master, text='部品名', font=self.font_frame)
+        # ボタン用のフレーム
+        self.frame_snap = tk.LabelFrame(self.frame_cam, text='', font=self.font_frame)
+        self.frame_snap.pack()
+        
+        # 撮影ボタン
+        self.btn_snapshot = tk.Button(self.frame_snap, text='撮影', font=self.font_lbl_middle)
+        self.btn_snapshot.configure(height=1, command=None)
+        self.btn_snapshot.grid(row=0, column=0, padx=10, pady=5)
+        
+        # クリアボタン
+        self.btn_clear = tk.Button(self.frame_snap, text='クリア', font=self.font_lbl_middle)
+        self.btn_clear.configure(height=1, command=None)
+        self.btn_clear.grid(row=0, column=1, padx=10, pady=5)
+        
+        # 判定結果用のフレーム
+        self.frame_c = tk.LabelFrame(self.master, text='判定結果(仮)', font=self.font_frame)
         self.frame_c.pack()
         # ディレクトリ用フレーム
         self.frame_dir = tk.Frame(self.master)
@@ -87,16 +114,6 @@ class Application(tk.Frame):
         self.dir_button = ttk.Button(self.frame_dir, text="保存先参照", command=self.dirdialog_clicked)
         self.dir_button.pack(side=LEFT)
         
-        # 撮影用のフレーム
-        self.frame_snap = tk.LabelFrame(self.master, text='撮影', font=self.font_frame)
-        self.frame_snap.pack(anchor=tk.S)
-        # 部品名の表示
-        self.show_parts_name = tk.Listbox(self.frame_snap, width=30, height=1, font=self.font_btn_small)
-        self.show_parts_name.grid(row=0, column=0)
-        # 撮影ボタン
-        self.btn_snapshot = tk.Button(self.frame_snap, text='撮影', font=self.font_lbl_middle)
-        self.btn_snapshot.configure(width=40, height=1, command=self.press_snapshot_button)
-        self.btn_snapshot.grid(row=1, column=0, columnspan=2)
     
         ''' 
         def update(self):
