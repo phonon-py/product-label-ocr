@@ -100,18 +100,20 @@ class Application(tk.Frame):
         self.btn_clear.grid(row=0, column=1, padx=10, pady=5)
         
         # 判定結果用のフレーム
-        self.frame_c = tk.LabelFrame(self.master, text='判定結果(仮)', font=self.font_frame)
-        self.frame_c.pack()
+        self.frame_judgment_result = tk.LabelFrame(self.master, text='判定結果(仮)', font=self.font_frame)
+        self.frame_judgment_result.pack()
+        
         # ディレクトリ用フレーム
-        self.frame_dir = tk.Frame(self.master)
-        self.frame_dir.pack(side=TOP)
+        # self.frame_dir = tk.Frame(self.master)
+        # self.frame_dir.pack(side=TOP)
+        
         # dir参照先を配置
         self.entry_ws = tk.StringVar()
-        self.dir_entry = ttk.Entry(self.frame_dir, textvariable=self.entry_ws, width=50)
+        self.dir_entry = ttk.Entry(self.frame_judgment_result, textvariable=self.entry_ws, width=50)
         # self.dir_entry.insert(0)
         self.dir_entry.pack(side=LEFT)
         # 参照ボタン
-        self.dir_button = ttk.Button(self.frame_dir, text="保存先参照", command=self.dirdialog_clicked)
+        self.dir_button = ttk.Button(self.frame_judgment_result, text="保存先参照", command=self.dirdialog_clicked)
         self.dir_button.pack(side=LEFT)
         
     
