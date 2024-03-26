@@ -13,7 +13,7 @@ class Application(tk.Frame):
     def __init__(self,master):
         super().__init__(master)
         # 画面サイズ
-        self.master.geometry("1280x550")
+        self.master.geometry("1280x960")
         # アプリタイトル
         self.master.title("現品送票依頼番号読み取りアプリ")
         # アプリのウィンドウサイズ固定
@@ -64,40 +64,41 @@ class Application(tk.Frame):
         self.height = self.vcap.get(cv2.CAP_PROP_FRAME_HEIGHT)
 
         # キャンバス更新間隔をミリ秒単位で設定 (15ミリ秒)
-        self.delay = 15 # [mili seconds]
+        self.delay = 15
 
-        # キャンバスのアップデート関数の呼び出し (現在コメントアウト)
-        # self.update()
-        
         '''
         フレームやボタンなどのウィジェットの実行
         '''
-
+        
         self.create_widgets()
-    
+        
+        # キャンバスのアップデート関数の呼び出し (現在コメントアウト)
+        self.update()
+
     def create_widgets(self):
         # カメラのフレーム
-        self.frame_cam = tk.LabelFrame(self.master, text = '入力画像', font=self.font_frame)
-        self.frame_cam.pack(side=LEFT, anchor=tk.NW)
-        
+        self.frame_cam = tk.LabelFrame(self.master, text='入力画像', font=self.font_frame)
+        self.frame_cam.pack(side=tk.LEFT, anchor=tk.NW, padx=10, pady=10)
+
         # Webカメラの画像を描写するキャンパスフレーム
         self.canvas1 = tk.Canvas(self.frame_cam)
         self.canvas1.configure(width=self.width, height=self.height)
-        self.canvas1.pack()
-        
-        # ボタン用のフレーム
-        self.frame_snap = tk.LabelFrame(self.frame_cam, text='', font=self.font_frame)
-        self.frame_snap.pack()
-        
+        self.canvas1.grid(row=0, column=0, columnspan=3)  # columnspanを調整して中央配置のための空間を作成
+
         # 撮影ボタン
-        self.btn_snapshot = tk.Button(self.frame_snap, text='撮影', font=self.font_lbl_middle)
+        self.btn_snapshot = tk.Button(self.frame_cam, text='撮影', font=self.font_lbl_middle)
         self.btn_snapshot.configure(height=1, command=None)
-        self.btn_snapshot.grid(row=0, column=0, padx=10, pady=5)
-        
-        # クリアボタン
-        self.btn_clear = tk.Button(self.frame_snap, text='クリア', font=self.font_lbl_middle)
+        self.btn_snapshot.grid(row=1, column=1)  # 中央の列に配置
+
+        # ボタン配置のための列の設定
+        self.frame_cam.columnconfigure(0, weight=1)  # 左の列を伸縮可能に
+        self.frame_cam.columnconfigure(2, weight=1)  # 右の列を伸縮可能に
+        # これにより、中央の列(column=1)にあるボタンが中央に配置される
+
+        # クリアボタン（オプションとして追加する場合、別の行か、または隣接する列に配置する）
+        self.btn_clear = tk.Button(self.frame_cam, text='クリア', font=self.font_lbl_middle)
         self.btn_clear.configure(height=1, command=None)
-        self.btn_clear.grid(row=0, column=1, padx=10, pady=5)
+        self.btn_clear.grid(row=1, column=2)  # 同じく中央の列に配置
         
         # 判定結果用のフレーム
         self.frame_judgment_result = tk.LabelFrame(self.master, text='判定結果(仮)', font=self.font_frame)
@@ -115,20 +116,18 @@ class Application(tk.Frame):
         # 参照ボタン
         self.dir_button = ttk.Button(self.frame_judgment_result, text="保存先参照", command=self.dirdialog_clicked)
         self.dir_button.pack(side=LEFT)
+
+    def update(self):
+        # カメラの設定
+        self.vcap.set(cv2.CAP_PROP_AUTOFOCUS, 1) # オートフォーカスの制御 0でOFF
+        #self.vcap.set(cv2.CAP_PROP_FOCUS, 35) # フォーカス値は0~250の範囲で5刻みに設定
+        _, frame = self.vcap.read()
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        self.photo = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(frame))
+        #self.photo -> Canvas
+        self.canvas1.create_image(0,0, image= self.photo, anchor = tk.NW)
+        self.master.after(self.delay, self.update)
         
-    
-        ''' 
-        def update(self):
-            # カメラの設定
-            self.vcap.set(cv2.CAP_PROP_AUTOFOCUS, 1) # オートフォーカスの制御 0でOFF
-            #self.vcap.set(cv2.CAP_PROP_FOCUS, 35) # フォーカス値は0~250の範囲で5刻みに設定
-            _, frame = self.vcap.read()
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            self.photo = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(frame))
-            #self.photo -> Canvas
-            self.canvas1.create_image(0,0, image= self.photo, anchor = tk.NW)
-            self.master.after(self.delay, self.update)
-        '''    
     
     def dirdialog_clicked(self):
         global now_path
