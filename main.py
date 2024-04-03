@@ -9,6 +9,7 @@ import shutil
 import cv2
 import PIL.Image, PIL.ImageTk
 
+
 class Application(tk.Frame):
     def __init__(self,master):
         super().__init__(master)
@@ -17,7 +18,7 @@ class Application(tk.Frame):
         # アプリタイトル
         self.master.title("現品送票依頼番号読み取りアプリ")
         # アプリのウィンドウサイズ固定
-        self.master.resizable(0, 0)
+        # self.master.resizable(0, 0)
         
         '''
         各フォント設定
@@ -41,28 +42,22 @@ class Application(tk.Frame):
         入力ソースの各種設定パラメータ
         '''
         
-        # 初期カメラ番号
+        # 初期カメラ番号、ノートPCの場合はインカメが0
         video_source = 0
         # カメラ描写の横サイズ
-        WIDTH = 640
+        WIDTH = 400
         # カメラ描写の縦サイズ
-        HEIGHT = 480
-
+        HEIGHT = 240
         # Webカメラを開く
         self.vcap = cv2.VideoCapture(video_source)
-
         # Webカメラのフレームサイズ(横)を設定
         self.vcap.set(cv2.CAP_PROP_FRAME_WIDTH, WIDTH)
-
         # Webカメラのフレームサイズ(縦)を設定
         self.vcap.set(cv2.CAP_PROP_FRAME_HEIGHT, HEIGHT)
-
         # 設定した横のフレームサイズを取得
         self.width = self.vcap.get(cv2.CAP_PROP_FRAME_WIDTH)
-
         # 設定した縦のフレームサイズを取得
         self.height = self.vcap.get(cv2.CAP_PROP_FRAME_HEIGHT)
-
         # キャンバス更新間隔をミリ秒単位で設定 (15ミリ秒)
         self.delay = 15
 
@@ -72,10 +67,19 @@ class Application(tk.Frame):
         
         self.create_widgets()
         
-        # キャンバスのアップデート関数の呼び出し (現在コメントアウト)
+        # キャンバスのアップデート関数の呼び出し
         self.update()
 
     def create_widgets(self):
+        # タイトル用のフレーム
+        self.frame_title = tk.Frame()
+        self.frame_title.pack()
+        
+        # タイトル用のラベル
+        self.title_lbl = tk.Label(self.frame_title, text="現品送票 依頼番号読み取り", 
+                                  font=self.font_lbl_middle)
+        self.title_lbl.pack()
+        
         # カメラのフレーム
         self.frame_cam = tk.LabelFrame(self.master, text='入力画像', font=self.font_frame)
         self.frame_cam.pack(side=tk.LEFT, anchor=tk.NW, padx=10, pady=10)
@@ -83,44 +87,55 @@ class Application(tk.Frame):
         # Webカメラの画像を描写するキャンパスフレーム
         self.canvas1 = tk.Canvas(self.frame_cam)
         self.canvas1.configure(width=self.width, height=self.height)
-        self.canvas1.grid(row=0, column=0, columnspan=3)  # columnspanを調整して中央配置のための空間を作成
+        # columnspanを調整して中央配置のための空間を作成
+        self.canvas1.grid(row=0, column=0, columnspan=3) 
 
         # 撮影ボタン
         self.btn_snapshot = tk.Button(self.frame_cam, text='撮影', font=self.font_lbl_middle)
         self.btn_snapshot.configure(height=1, command=None)
-        self.btn_snapshot.grid(row=1, column=1)  # 中央の列に配置
+        self.btn_snapshot.grid(row=1, column=0)  
 
-        # ボタン配置のための列の設定
-        self.frame_cam.columnconfigure(0, weight=1)  # 左の列を伸縮可能に
-        self.frame_cam.columnconfigure(2, weight=1)  # 右の列を伸縮可能に
-        # これにより、中央の列(column=1)にあるボタンが中央に配置される
-
-        # クリアボタン（オプションとして追加する場合、別の行か、または隣接する列に配置する）
+        # クリアボタン
         self.btn_clear = tk.Button(self.frame_cam, text='クリア', font=self.font_lbl_middle)
         self.btn_clear.configure(height=1, command=None)
-        self.btn_clear.grid(row=1, column=2)  # 同じく中央の列に配置
+        self.btn_clear.grid(row=1, column=2) 
         
         # 判定結果用のフレーム
         self.frame_judgment_result = tk.LabelFrame(self.master, text='判定結果(仮)', font=self.font_frame)
         self.frame_judgment_result.pack()
-        
-        # ディレクトリ用フレーム
-        # self.frame_dir = tk.Frame(self.master)
-        # self.frame_dir.pack(side=TOP)
-        
-        # dir参照先を配置
-        self.entry_ws = tk.StringVar()
-        self.dir_entry = ttk.Entry(self.frame_judgment_result, textvariable=self.entry_ws, width=50)
-        # self.dir_entry.insert(0)
-        self.dir_entry.pack(side=LEFT)
-        # 参照ボタン
-        self.dir_button = ttk.Button(self.frame_judgment_result, text="保存先参照", command=self.dirdialog_clicked)
-        self.dir_button.pack(side=LEFT)
 
+        #! 判定結果用ラベルの設定(列単位で配置)
+        self.judgment_result_lbl1 = tk.Label(self.frame_judgment_result, text="照合判定", 
+                                             font=self.font_lbl_middle)
+        self.judgment_result_lbl1.grid(row=0,column=0)
+        # 判定結果、実際はつきあせた結果を表示する。
+        self.judgment_result_lbl2 = tk.Label(self.frame_judgment_result, text="OK", 
+                                             font=self.font_lbl_middle)
+        self.judgment_result_lbl2.grid(row=1,column=0)
+
+        self.judgment_result_lbl3 = tk.Label(self.frame_judgment_result, text="担当", 
+                                             font=self.font_lbl_middle)
+        self.judgment_result_lbl3.grid(row=2,column=0)
+
+        self.judgment_result_lbl4 = tk.Entry(self.frame_judgment_result, text="", 
+                                             font=self.font_lbl_middle)
+        self.judgment_result_lbl4.grid(row=3,column=0)
+
+
+
+        self.judgment_result_lbl = tk.Label(self.frame_judgment_result, text="購入品状況", 
+                                             font=self.font_lbl_middle)
+        self.judgment_result_lbl1.grid(row=0,column=1)
+        
+        
     def update(self):
-        # カメラの設定
-        self.vcap.set(cv2.CAP_PROP_AUTOFOCUS, 1) # オートフォーカスの制御 0でOFF
-        #self.vcap.set(cv2.CAP_PROP_FOCUS, 35) # フォーカス値は0~250の範囲で5刻みに設定
+        '''
+        Webカメラの設定
+        
+        オートフォーカスの制御は0でOFF
+        フォーカス値は0~250の範囲で5刻みに設定
+        '''
+        self.vcap.set(cv2.CAP_PROP_AUTOFOCUS, 1) # 
         _, frame = self.vcap.read()
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         self.photo = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(frame))
