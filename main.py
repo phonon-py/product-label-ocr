@@ -7,6 +7,7 @@ import time
 import cv2
 from PIL import ImageTk, Image
 import pytesseract
+import matplotlib.pyplot as plt
 
 # tesseractの実行ファイルへのパス
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
@@ -53,9 +54,9 @@ class Application(tk.Frame):
         # 初期カメラ番号、ノートPCの場合はインカメが0
         video_source = 0
         # カメラ描写の横サイズ
-        WIDTH = 400
+        WIDTH = 642
         # カメラ描写の縦サイズ
-        HEIGHT = 240
+        HEIGHT = 428
         # Webカメラを設定
         self.cap = cv2.VideoCapture(video_source)
         # Webカメラのフレームサイズ(横)を設定
@@ -91,7 +92,7 @@ class Application(tk.Frame):
         self.frame_title.pack()
         
         # タイトル用のラベル
-        self.title_lbl = tk.Label(self.frame_title, text="現品送票 依頼番号読み取り��プリ", 
+        self.title_lbl = tk.Label(self.frame_title, text="現品送票 依頼番号読み取りアプリ", 
                                   font=self.font_lbl_middle)
         self.title_lbl.pack()
         
@@ -170,7 +171,7 @@ class Application(tk.Frame):
         self.judgment_result_lbl8.grid(row=3,column=1, padx=10, pady=10)
 
         '''
-        依頼番号読��取り表示
+        依頼番号表示
         '''
         self.judgment_result_lbl10 = tk.Entry(self.frame_judgment_result,
                                              font=self.font_lbl_middle,
@@ -220,31 +221,23 @@ class Application(tk.Frame):
             
             '''
             画像デバック用
-            
+            #! todo
             '''
-            print(f'選択範囲roi:{roi}')
             
-            # 画像を2値化する
-            # _, binary_roi = cv2.threshold(roi, 90, 255, cv2.THRESH_BINARY)
+            # number_binary = cv2.GaussianBlur(roi, (1, 1), 0)  # ガウシアンフィルタ~~白色ノイズ除去
+            number_binary = cv2.medianBlur(roi, ksize=1) # ノイズ除去
+            number_binary = cv2.cvtColor(number_binary, cv2.COLOR_BGR2GRAY)  # グレースケール化
+            # _, number_binary = cv2.threshold(number_binary, 100, 150,cv2.THRESH_BINARY)
             
-            # ノイズ除去
-            # denoised_roi = cv2.fastNlMeansDenoising(roi, None, 1, 7, 21)
-            
-            # ウィンドウを作成
-            # cv2.namedWindow('Denoised Binary ROI', cv2.WINDOW_NORMAL)
-
-            # ノイズ除去された2値化された画像を表示
-            # cv2.imshow('Denoised Binary ROI', roi)
-
-
-            # キーが押されるまで待機
-            # cv2.waitKey(0)
-            
+            # フィルター処理後の画像を表示するウィンドウを追加
+            cv2.imshow('Filtered Image', number_binary)
+            cv2.waitKey(0) # ウィンドウが閉じられるまで待機
+            cv2.destroyAllWindows() # すべてのウィンドウを閉じる
             
             # 数字とハイフンのみ
             config = '--oem 3 --psm 6 -c tessedit_char_whitelist="0123456789-"'
-            text = pytesseract.image_to_string(roi, config=config)
-            
+            text = pytesseract.image_to_string(number_binary, config=config)
+
             # OCR結果をself.judgment_result_lbl10に設定
             self.judgment_result_lbl10.delete(0, tk.END) # 既存のテキストを削除
             self.judgment_result_lbl10.insert(0, text) # OCR結果を挿入
